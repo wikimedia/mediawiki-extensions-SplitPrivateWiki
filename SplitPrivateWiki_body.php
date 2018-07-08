@@ -213,8 +213,49 @@ class SplitPrivateWiki {
 	}
 
 	public static function onNewRevisionFromEditComplete( Page $wikipage, Revision $rev, $revid, $user, $tags ) {
-		global $wgExclusiveNamespaces, $wgBuiltinNamespacesToRename, $wgConf;
 		$title = $wikipage->getTitle();
+		self::sendJob( $title, [
+			'srcWiki' => wfWikiId(),
+			'srcPrefixedText' => $title->getPrefixedDBkey(),
+		] );
+	}
+
+	public static function onArticleUndelete( $title, $created, $comment, $oldPageId, $restoredPages ) {
+		self::sendJob( $title, [
+			'srcWiki' => wfWikiId(),
+			'srcPrefixedText' => $title->getPrefixedDBkey(),
+		] );
+	}
+
+	public static function onTitleMoveComplete(
+		Title $oldTitle, Title $newTitle, User $user, $pageId, $redirId, $reason, $nullRevision
+	) {
+		// Hacky. Page moves aren't supported yet. So for now delete and recreate.
+		self::sendJob( $title, [
+			'srcWiki' => wfWikiId(),
+			'srcPrefixedText' => $oldTitle->getPrefixedDBkey(),
+			'forceDelete' => $user->getName(),
+			'forceDeleteReason' => $reason
+		] );
+
+
+		self::sendJob( $title, [
+			'srcWiki' => wfWikiId(),
+			'srcPrefixedText' => $newTitle->getPrefixedDBkey(),
+		] );
+	}
+	public static function onArticleDeleteComplete( $wikipage, $user, $reason, $id, $content, $logEntry, $archivedRevisionCount ) {
+		$title = $wikipage->getTitle();
+		self::sendJob( $title, [
+			'srcWiki' => wfWikiId(),
+			'srcPrefixedText' => $title->getPrefixedDBkey(),
+			'forceDelete' => $user->getName(),
+			'forceDeleteReason' => $reason
+		] );
+	}
+
+	private static function sendJob( Title $title, array $params ) {
+		global $wgExclusiveNamespaces, $wgBuiltinNamespacesToRename, $wgConf;
 		if (
 			in_array( $title->getNamespace(), $wgExclusiveNamespaces ) ||
 			in_array( $title->getNamespace(), $wgBuiltinNamespacesToRename )
@@ -224,11 +265,7 @@ class SplitPrivateWiki {
 					continue;
 				}
 				$jobs = [
-					new SyncArticleJob( $title, [
-						'srcWiki' => wfWikiId(),
-						'srcPrefixedText' => $title->getPrefixedDBkey(),
-						'srcPageId' => $title->getArticleId(),
-					] )
+					new SyncArticleJob( $title, $params )
 				];
 				JobQueueGroup::singleton( $wiki )->lazyPush( $jobs );
 			}
