@@ -42,7 +42,10 @@ class SplitPrivateWiki {
 
 		$privateServer = $wgConf->get( 'wgServer', $privateWiki );
 		$privatePath = $wgConf->get( 'wgScriptPath', $privateWiki );
-		if (
+		if ( defined( 'MW_DB' ) ) {
+			// For command line scripts
+			$wgDBname = MW_DB;
+		} elseif (
 			( WebRequest::detectServer() === $privateServer ) &&
 			( strpos( $_SERVER['REQUEST_URI'], $privatePath ) === 0 )
 		) {
@@ -134,10 +137,9 @@ class SplitPrivateWiki {
 			}
 			$exclusives = $wgConf->get( 'wgExclusiveNamespaces', $wiki );
 			$curNamespace = $title->getNamespace();
-			var_dump( __METHOD__, $wiki, $exclusives, $curNamespace );
 			// Don't forget NS_SPECIAL will be < 110000
 			if (
-				( $curNamespace > 109900 ) && ( $curNamespace < 120000 ) ||
+				self::isRenamedForeignNamespace( $curNamespace ) ||
 				in_array( $curNamespace, $exclusives )
 			) {
 				$target = WikiMap::getForeignURL( $wiki, $title->getPrefixedDBkey() );
@@ -145,6 +147,90 @@ class SplitPrivateWiki {
 					throw new Exception( "Could not make url of foreign wiki $wiki" );
 				}
 				return false;
+			}
+		}
+	}
+
+	public static function onLanguageGetNamespaces( &$nsNames ) {
+		global $wgBuiltinNamespacesToRename, $wgMetaNamespace,
+			$wgNamespaceAliases, $wgConf, $wgDBname,
+			$wgExtraNamespaces, $wgNamespaceProtection;
+
+		$baseOffset = 100000;
+		foreach( $wgBuiltinNamespacesToRename as $nsIndex ) {
+			if ( isset( $nsNames[$nsIndex] ) ) {
+				$oldName = $nsNames[$nsIndex];
+				$nsNames[$nsIndex] .= "_($wgMetaNamespace)";
+				$wgNamespaceAliases[$oldName] = $nsIndex;
+
+				$offset = $baseOffset;
+				foreach( $wgConf->wikis as $wiki ) {
+					$offset += 10000;
+					if ( $wiki === $wgDBname ) {
+						continue;
+					}
+					$metaNS = $wgConf->get( 'wgMetaNamespace', $wiki ) ?:
+						str_replace( ' ', '_', $wgConf->get( 'wgSitename', $wiki ) );
+					$nsNames[$nsIndex+$offset] = $oldName . "_($metaNS)";
+					$wgExtraNamespaces[$nsIndex+$offset] = $oldName . "_($metaNS)";
+					$wgNamespaceProtection[$nsIndex+$offset] = [ 'nobody' ];
+				}
+
+			}
+			$offset = $baseOffset;
+			foreach( $wgConf->wikis as $wiki ) {
+				$offset += 10000;
+				if ( $wiki === $wgDBname ) {
+					continue;
+				}
+				$metaNS = $wgConf->get( 'wgMetaNamespace', $wiki ) ?:
+					str_replace( ' ', '_', $wgConf->get( 'wgSitename', $wiki ) );
+				$wgExtraNamespaces[NS_PROJECT+$offset] = $metaNS;
+				$nsNames[NS_PROJECT+$offset] = $metaNS;
+				$wgNamespaceProtection[NS_PROJECT+$offset] = [ 'nobody' ];
+				$exclusives = $wgConf->get( 'wgExclusiveNamespaces', $wiki );
+				foreach( $exclusives as $exclusive ) {
+					$wgNamespaceProtection[$exclusive] = [ 'nobody' ];
+				}
+			}
+		}
+		MWNamespace::clearCaches();
+	}
+
+	/**
+	 * Whether this is the local version of a renamed foreign namespace
+	 *
+	 * @param int $ns Namespace index
+	 * @return bool
+	 */
+	public static function isRenamedForeignNamespace( $ns ) {
+		// Keep in mind that NS_SPECIAL is -1 so it is before 110000.
+		return ( $ns > 109990 ) && ( $ns < 120000 );
+	}
+
+	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $up ) {
+		$up->addExtensionTable( 'foreignrevisionlink', __DIR__ . '/tables.sql' );
+	}
+
+	public static function onNewRevisionFromEditComplete( Page $wikipage, Revision $rev, $revid, $user, $tags ) {
+		global $wgExclusiveNamespaces, $wgBuiltinNamespacesToRename, $wgConf;
+		$title = $wikipage->getTitle();
+		if (
+			in_array( $title->getNamespace(), $wgExclusiveNamespaces ) ||
+			in_array( $title->getNamespace(), $wgBuiltinNamespacesToRename )
+		) {
+			foreach( $wgConf->wikis as $wiki ) {
+				if ( $wiki === wfWikiId() ) {
+					continue;
+				}
+				$jobs = [
+					new SyncArticleJob( $title, [
+						'srcWiki' => wfWikiId(),
+						'srcPrefixedText' => $title->getPrefixedDBkey(),
+						'srcPageId' => $title->getArticleId(),
+					] )
+				];
+				JobQueueGroup::singleton( $wiki )->lazyPush( $jobs );
 			}
 		}
 	}

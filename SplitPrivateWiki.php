@@ -39,5 +39,15 @@ $wgBuiltinNamespacesToRename = [
 	NS_MEDIAWIKI_TALK
 ];
 
+// true to make all pushed edits show up in RC,
+// 'bot' to make them show up as bot edits
+// false to hide from RC entirely.
+$wgSplitWikiShowInRc = 'bot';
+
 $wgHooks['InitializeArticleMaybeRedirect'][] = 'SplitPrivateWiki::onInitializeArticleMaybeRedirect';
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'SplitPrivateWiki::onLoadExtensionSchemaUpdates';
+$wgHooks['NewRevisionFromEditComplete'][] = 'SplitPrivateWiki::onNewRevisionFromEditComplete';
+$wgHooks['LanguageGetNamespaces'][] = 'SplitPrivateWiki::onLanguageGetNamespaces';
+$wgJobClasses['SyncArticleJob'] = 'SyncArticleJob';
 $wgAutoloadClasses['SplitPrivateWiki'] = __DIR__ . '/SplitPrivateWiki_body.php';
+$wgAutoloadClasses['SyncArticleJob'] = __DIR__ . '/SyncArticleJob.php';
