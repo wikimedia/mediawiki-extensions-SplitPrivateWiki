@@ -31,8 +31,7 @@ $wgExtensionCredits['other'][] = array(
         'version' => '0.1',
         'url' => 'https://mediawiki.org/wiki/Extension:SplitPrivateWiki',
         'author' => 'Brian Wolff',
-	// FIXME add actual i18n
-        'description' => 'Make a private & a public wiki look like a single wiki',
+        'descriptionmsg' => 'splitprivatewiki-desc',
         'license-name' => 'GPL-2.0+'
 );
 
@@ -61,6 +60,8 @@ $wgBuiltinNamespacesToRename = [
 // 'bot' to make them show up as bot edits
 // false to hide from RC entirely.
 $wgSplitWikiShowInRc = 'bot';
+
+$wgMessagesDirs['SplitPrivateWiki'] = __DIR__ . '/i18n';
 
 $wgHooks['InitializeArticleMaybeRedirect'][] = 'SplitPrivateWiki::onInitializeArticleMaybeRedirect';
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'SplitPrivateWiki::onLoadExtensionSchemaUpdates';
