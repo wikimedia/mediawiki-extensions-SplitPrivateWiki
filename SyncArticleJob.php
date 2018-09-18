@@ -48,7 +48,8 @@ class SyncArticleJob extends Job {
 		$pageId = $localTitle->getArticleID();
 		$page = WikiPage::factory( $localTitle );
 		$error = '';
-		$status = $page->doDeleteArticleReal( $summary, false, null, null, $error, $user, ['auto-sync'] );
+		$status = $page->doDeleteArticleReal( $summary, false, null, null, $error, $user,
+			['auto-sync'], 'delete', true );
 		if ( !$status->isGood() ) {
 			throw new Exception( $status->getWikiText() );
 		}
@@ -130,7 +131,7 @@ class SyncArticleJob extends Job {
 				[ 'rev_id' => $newRevId ],
 				__METHOD__
 			);
-		} 
+		}
 	}
 
 	private function getForeignPageId() {
