@@ -18,58 +18,16 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-// Intentionally not doing extension.json, as this
-// extension affects how configuration works, so needs
-// to load prior to extensions.
-//
-// I suppose I could split it half and half extension.json,
-// but that seems silly.
-
-$wgExtensionCredits['other'][] = array(
-        'path' => __FILE__,
-        'name' => 'SplitPrivateWiki',
-        'version' => '0.1',
-        'url' => 'https://mediawiki.org/wiki/Extension:SplitPrivateWiki',
-        'author' => 'Brian Wolff',
-        'descriptionmsg' => 'splitprivatewiki-desc',
-        'license-name' => 'GPL-2.0+'
-);
-
-/**
- * @var int[] $wgExclusiveNamespaces
- * Namespaces that are exclusively handled by the current wiki
- * (e.g. The other wikis should redirect to current wiki)
- */
-$wgExclusiveNamespaces = [];
-/**
- * @var int[] $wgBuiltinNamespacesToRename
- *
- * Any builtin namespace where you want both wikis to have a copy
- */
-$wgBuiltinNamespacesToRename = [
-	NS_SPECIAL,
-	NS_USER,
-	NS_USER_TALK,
-	NS_CATEGORY,
-	NS_CATEGORY_TALK,
-	NS_MEDIAWIKI,
-	NS_MEDIAWIKI_TALK
-];
-
-// true to make all pushed edits show up in RC,
-// 'bot' to make them show up as bot edits
-// false to hide from RC entirely.
-$wgSplitWikiShowInRc = 'bot';
-
-$wgMessagesDirs['SplitPrivateWiki'] = __DIR__ . '/i18n';
-
-$wgHooks['InitializeArticleMaybeRedirect'][] = 'SplitPrivateWiki::onInitializeArticleMaybeRedirect';
-$wgHooks['LoadExtensionSchemaUpdates'][] = 'SplitPrivateWiki::onLoadExtensionSchemaUpdates';
-$wgHooks['NewRevisionFromEditComplete'][] = 'SplitPrivateWiki::onNewRevisionFromEditComplete';
-$wgHooks['ArticleDeleteComplete'][] = 'SplitPrivateWiki::onArticleDeleteComplete';
-$wgHooks['ArticleUndelete'][] = 'SplitPrivateWiki::onArticleUndelete';
-$wgHooks['TitleMoveComplete'][] = 'SplitPrivateWiki::ononTitleMoveComplete';
-$wgHooks['LanguageGetNamespaces'][] = 'SplitPrivateWiki::onLanguageGetNamespaces';
-$wgJobClasses['SyncArticleJob'] = 'SyncArticleJob';
-$wgAutoloadClasses['SplitPrivateWiki'] = __DIR__ . '/SplitPrivateWiki_body.php';
-$wgAutoloadClasses['SyncArticleJob'] = __DIR__ . '/SyncArticleJob.php';
+if ( function_exists( 'wfLoadExtension' ) ) {
+	wfLoadExtension( 'SplitPrivateWiki' );
+	// Keep i18n globals so mergeMessageFileList.php doesn't break
+	$wgMessagesDirs['SplitPrivateWiki'] = __DIR__ . '/i18n';
+	wfWarn(
+		'Deprecated PHP entry point used for the SplitPrivateWiki extension. ' .
+		'Please use wfLoadExtension() instead, ' .
+		'see https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Extension_registration for more details.'
+	);
+	return;
+} else {
+	die( 'This version of the SplitPrivateWiki extension requires MediaWiki 1.29+' );
+}
