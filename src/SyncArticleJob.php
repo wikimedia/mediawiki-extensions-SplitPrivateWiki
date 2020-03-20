@@ -52,12 +52,12 @@ class SyncArticleJob extends Job {
 		if ( version_compare( MW_VERSION, '1.35', '<' ) ) {
 			$status = $page->doDeleteArticleReal(
 				$summary, false, null, null, $error, $user,
-				['auto-sync'], 'delete', true
+				[ 'auto-sync' ], 'delete', true
 			);
 		} else {
 			$status = $page->doDeleteArticleReal(
 				$summary, $user, false, null, $error, null,
-				['auto-sync'], 'delete', true
+				[ 'auto-sync' ], 'delete', true
 			);
 		}
 
@@ -181,7 +181,7 @@ class SyncArticleJob extends Job {
 				'rev_text_id = old_id',
 				'old_flags' => 'utf-8', // For the moment, do bare min.
 				'rev_page' => $this->getForeignPageId(),
-				'rev_id > ' . ((int)$latest),
+				'rev_id > ' . (int)$latest,
 			],
 			__METHOD__,
 			// FIXME, should schedule multiple jobs or something
@@ -189,6 +189,7 @@ class SyncArticleJob extends Job {
 			[ 'ORDER BY' => 'rev_id asc', 'LIMIT' => 200 ]
 		);
 	}
+
 	private function getMostRecentForeignRev( Title $localTitle ) {
 		$dbr = wfGetDB( DB_MASTER );
 		return $dbr->selectField(
@@ -196,7 +197,7 @@ class SyncArticleJob extends Job {
 			'frl_foreign_rev_id',
 			[
 				'rev_id = frl_rev_id',
-                                'rev_page' => $localTitle->getArticleId( Title::GAID_FOR_UPDATE )
+				'rev_page' => $localTitle->getArticleId( Title::GAID_FOR_UPDATE )
 			],
 			__METHOD__,
 			[ 'ORDER BY' => 'rev_id desc', 'LOCK IN SHARE MODE' ]
