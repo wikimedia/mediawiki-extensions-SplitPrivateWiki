@@ -214,7 +214,7 @@ class SplitPrivateWiki {
 	}
 
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $up ) {
-		$up->addExtensionTable( 'foreignrevisionlink', __DIR__ . '/tables.sql' );
+		$up->addExtensionTable( 'foreignrevisionlink', __DIR__ . '/../sql/tables.sql' );
 	}
 
 	public static function onNewRevisionFromEditComplete( Page $wikipage, $rev, $revid, $user, $tags ) {
