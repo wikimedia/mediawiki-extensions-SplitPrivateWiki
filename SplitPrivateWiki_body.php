@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\User\UserIdentity;
+
 class SplitPrivateWiki {
 	/**
 	 * @param array $config Configuration for split wiki. Keys as follows:
@@ -120,7 +122,7 @@ class SplitPrivateWiki {
 	 * @param string $wiki The db name of the wiki
 	 * @return array See SiteConfiguration::getWikiParams
 	 */
-	public static function siteParamsCallback( SiteConfiguration $conf, $wiki ) {
+	public static function siteParamsCallback( $conf, $wiki ) {
 		return [
 			'suffix' => $wiki,
 			'lang' => 'www'
@@ -128,7 +130,11 @@ class SplitPrivateWiki {
 	}
 
 	public static function onInitializeArticleMaybeRedirect(
-		&$title, &$request, &$ignoreRedirect, &$target, &$article
+		Title $title,
+		$request,
+		&$ignoreRedirect,
+		&$target,
+		&$article
 	) {
 		global $wgConf, $wgDBname;
 		foreach( $wgConf->wikis as $wiki ) {
@@ -194,7 +200,6 @@ class SplitPrivateWiki {
 				}
 			}
 		}
-		MWNamespace::clearCaches();
 	}
 
 	/**
@@ -212,7 +217,7 @@ class SplitPrivateWiki {
 		$up->addExtensionTable( 'foreignrevisionlink', __DIR__ . '/tables.sql' );
 	}
 
-	public static function onNewRevisionFromEditComplete( Page $wikipage, Revision $rev, $revid, $user, $tags ) {
+	public static function onNewRevisionFromEditComplete( Page $wikipage, $rev, $revid, $user, $tags ) {
 		$title = $wikipage->getTitle();
 		self::sendJob( $title, [
 			'srcWiki' => wfWikiId(),
@@ -220,7 +225,7 @@ class SplitPrivateWiki {
 		] );
 	}
 
-	public static function onArticleUndelete( $title, $created, $comment, $oldPageId, $restoredPages ) {
+	public static function onArticleUndelete( Title $title, $created, $comment, $oldPageId, $restoredPages ) {
 		self::sendJob( $title, [
 			'srcWiki' => wfWikiId(),
 			'srcPrefixedText' => $title->getPrefixedDBkey(),
@@ -228,10 +233,10 @@ class SplitPrivateWiki {
 	}
 
 	public static function onTitleMoveComplete(
-		Title $oldTitle, Title $newTitle, User $user, $pageId, $redirId, $reason, $nullRevision
+		Title $oldTitle, Title $newTitle, UserIdentity $user, $pageId, $redirId, $reason, $nullRevision
 	) {
 		// Hacky. Page moves aren't supported yet. So for now delete and recreate.
-		self::sendJob( $title, [
+		self::sendJob( $oldTitle, [
 			'srcWiki' => wfWikiId(),
 			'srcPrefixedText' => $oldTitle->getPrefixedDBkey(),
 			'forceDelete' => $user->getName(),
@@ -239,12 +244,20 @@ class SplitPrivateWiki {
 		] );
 
 
-		self::sendJob( $title, [
+		self::sendJob( $newTitle, [
 			'srcWiki' => wfWikiId(),
 			'srcPrefixedText' => $newTitle->getPrefixedDBkey(),
 		] );
 	}
-	public static function onArticleDeleteComplete( $wikipage, $user, $reason, $id, $content, $logEntry, $archivedRevisionCount ) {
+	public static function onArticleDeleteComplete(
+		WikiPage $wikipage,
+		UserIdentity $user,
+		$reason,
+		$id,
+		$content,
+		$logEntry,
+		$archivedRevisionCount
+	) {
 		$title = $wikipage->getTitle();
 		self::sendJob( $title, [
 			'srcWiki' => wfWikiId(),
