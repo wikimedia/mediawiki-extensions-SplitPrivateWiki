@@ -47,9 +47,20 @@ class SyncArticleJob extends Job {
 
 		$pageId = $localTitle->getArticleID();
 		$page = WikiPage::factory( $localTitle );
+
 		$error = '';
-		$status = $page->doDeleteArticleReal( $summary, false, null, null, $error, $user,
-			['auto-sync'], 'delete', true );
+		if ( version_compare( MW_VERSION, '1.35', '<' ) ) {
+			$status = $page->doDeleteArticleReal(
+				$summary, false, null, null, $error, $user,
+				['auto-sync'], 'delete', true
+			);
+		} else {
+			$status = $page->doDeleteArticleReal(
+				$summary, $user, false, null, $error, null,
+				['auto-sync'], 'delete', true
+			);
+		}
+
 		if ( !$status->isGood() ) {
 			throw new Exception( $status->getWikiText() );
 		}
