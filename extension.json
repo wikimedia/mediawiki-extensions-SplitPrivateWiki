@@ -1,0 +1,53 @@
+{
+	"name": "SplitPrivateWiki",
+	"version": "0.2",
+	"author": "Brian Wolff",
+	"url": "https://www.mediawiki.org/wiki/Extension:SplitPrivateWiki",
+	"descriptionmsg": "splitprivatewiki-desc",
+	"license-name": "GPL-2.0+",
+	"type": "other",
+	"requires": {
+		"MediaWiki": ">= 1.29.0"
+	},
+	"JobClasses": {
+		"SyncArticleJob": "SyncArticleJob"
+	},
+	"MessagesDirs": {
+		"SplitPrivateWiki": [
+			"i18n"
+		]
+	},
+	"AutoloadClasses": {
+		"SplitPrivateWiki": "SplitPrivateWiki_body.php",
+		"SyncArticleJob": "SyncArticleJob.php"
+	},
+	"Hooks": {
+		"InitializeArticleMaybeRedirect": "SplitPrivateWiki::onInitializeArticleMaybeRedirect",
+		"LoadExtensionSchemaUpdates": "SplitPrivateWiki::onLoadExtensionSchemaUpdates",
+		"NewRevisionFromEditComplete": "SplitPrivateWiki::onNewRevisionFromEditComplete",
+		"ArticleDeleteComplete": "SplitPrivateWiki::onArticleDeleteComplete",
+		"ArticleUndelete": "SplitPrivateWiki::onArticleUndelete",
+		"TitleMoveComplete": "SplitPrivateWiki::ononTitleMoveComplete",
+		"LanguageGetNamespaces": "SplitPrivateWiki::onLanguageGetNamespaces"
+	},
+	"config": {
+		"ExclusiveNamespaces": {
+			"value": []
+		},
+		"BuiltinNamespacesToRename": {
+			"value": [
+				-1,
+				2,
+				3,
+				14,
+				15,
+				8,
+				9
+			]
+		},
+		"SplitWikiShowInRc": {
+			"value": "bot"
+		}
+	},
+	"manifest_version": 2
+}
