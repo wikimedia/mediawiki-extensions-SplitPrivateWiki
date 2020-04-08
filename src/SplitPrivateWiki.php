@@ -29,8 +29,8 @@ class SplitPrivateWiki {
 			'public' => $publicWiki,
 			'common' => 'default'
 		];
-		foreach( $typeToWiki as $type => $wiki ) {
-			foreach( $config[$type] as $setting => $value ) {
+		foreach ( $typeToWiki as $type => $wiki ) {
+			foreach ( $config[$type] as $setting => $value ) {
 				if ( !isset( $wgConf->settings[$setting] ) ) {
 					$wgConf->settings[$setting] = [];
 				}
@@ -79,7 +79,6 @@ class SplitPrivateWiki {
 				// public_wiki is in default section
 				$secretDB => 'secret-section',
 			],
-
 
 			'sectionLoads' => [
 				/* public-section */ 'DEFAULT' => [
@@ -137,7 +136,7 @@ class SplitPrivateWiki {
 		&$article
 	) {
 		global $wgConf, $wgDBname;
-		foreach( $wgConf->wikis as $wiki ) {
+		foreach ( $wgConf->wikis as $wiki ) {
 			if ( $wiki === $wgDBname ) {
 				continue;
 			}
@@ -163,39 +162,39 @@ class SplitPrivateWiki {
 			$wgExtraNamespaces, $wgNamespaceProtection;
 
 		$baseOffset = 100000;
-		foreach( $wgBuiltinNamespacesToRename as $nsIndex ) {
+		foreach ( $wgBuiltinNamespacesToRename as $nsIndex ) {
 			if ( isset( $nsNames[$nsIndex] ) ) {
 				$oldName = $nsNames[$nsIndex];
 				$nsNames[$nsIndex] .= "_($wgMetaNamespace)";
 				$wgNamespaceAliases[$oldName] = $nsIndex;
 
 				$offset = $baseOffset;
-				foreach( $wgConf->wikis as $wiki ) {
+				foreach ( $wgConf->wikis as $wiki ) {
 					$offset += 10000;
 					if ( $wiki === $wgDBname ) {
 						continue;
 					}
 					$metaNS = $wgConf->get( 'wgMetaNamespace', $wiki ) ?:
 						str_replace( ' ', '_', $wgConf->get( 'wgSitename', $wiki ) );
-					$nsNames[$nsIndex+$offset] = $oldName . "_($metaNS)";
-					$wgExtraNamespaces[$nsIndex+$offset] = $oldName . "_($metaNS)";
-					$wgNamespaceProtection[$nsIndex+$offset] = [ 'nobody' ];
+					$nsNames[$nsIndex + $offset] = $oldName . "_($metaNS)";
+					$wgExtraNamespaces[$nsIndex + $offset] = $oldName . "_($metaNS)";
+					$wgNamespaceProtection[$nsIndex + $offset] = [ 'nobody' ];
 				}
 
 			}
 			$offset = $baseOffset;
-			foreach( $wgConf->wikis as $wiki ) {
+			foreach ( $wgConf->wikis as $wiki ) {
 				$offset += 10000;
 				if ( $wiki === $wgDBname ) {
 					continue;
 				}
 				$metaNS = $wgConf->get( 'wgMetaNamespace', $wiki ) ?:
 					str_replace( ' ', '_', $wgConf->get( 'wgSitename', $wiki ) );
-				$wgExtraNamespaces[NS_PROJECT+$offset] = $metaNS;
-				$nsNames[NS_PROJECT+$offset] = $metaNS;
-				$wgNamespaceProtection[NS_PROJECT+$offset] = [ 'nobody' ];
+				$wgExtraNamespaces[NS_PROJECT + $offset] = $metaNS;
+				$nsNames[NS_PROJECT + $offset] = $metaNS;
+				$wgNamespaceProtection[NS_PROJECT + $offset] = [ 'nobody' ];
 				$exclusives = $wgConf->get( 'wgExclusiveNamespaces', $wiki );
-				foreach( $exclusives as $exclusive ) {
+				foreach ( $exclusives as $exclusive ) {
 					$wgNamespaceProtection[$exclusive] = [ 'nobody' ];
 				}
 			}
@@ -243,12 +242,12 @@ class SplitPrivateWiki {
 			'forceDeleteReason' => $reason
 		] );
 
-
 		self::sendJob( $newTitle, [
 			'srcWiki' => wfWikiId(),
 			'srcPrefixedText' => $newTitle->getPrefixedDBkey(),
 		] );
 	}
+
 	public static function onArticleDeleteComplete(
 		WikiPage $wikipage,
 		UserIdentity $user,
@@ -273,7 +272,7 @@ class SplitPrivateWiki {
 			in_array( $title->getNamespace(), $wgExclusiveNamespaces ) ||
 			in_array( $title->getNamespace(), $wgBuiltinNamespacesToRename )
 		) {
-			foreach( $wgConf->wikis as $wiki ) {
+			foreach ( $wgConf->wikis as $wiki ) {
 				if ( $wiki === wfWikiId() ) {
 					continue;
 				}
