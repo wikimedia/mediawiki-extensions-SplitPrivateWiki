@@ -18,8 +18,8 @@
 		]
 	},
 	"AutoloadClasses": {
-		"SplitPrivateWiki": "SplitPrivateWiki_body.php",
-		"SyncArticleJob": "SyncArticleJob.php"
+		"SplitPrivateWiki": "src/SplitPrivateWiki.php",
+		"SyncArticleJob": "src/SyncArticleJob.php"
 	},
 	"Hooks": {
 		"InitializeArticleMaybeRedirect": "SplitPrivateWiki::onInitializeArticleMaybeRedirect",
