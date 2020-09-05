@@ -4,6 +4,21 @@ use MediaWiki\User\UserIdentity;
 
 class SplitPrivateWiki {
 	/**
+	 * Register hooks depending on version
+	 */
+	public static function registerExtension() {
+		global $wgHooks;
+		if ( class_exists( \MediaWiki\HookContainer\HookContainer::class ) ) {
+			// MW 1.35+
+			$wgHooks['RevisionFromEditComplete'][] =
+				'SplitPrivateWiki::onNewRevisionFromEditComplete';
+		} else {
+			$wgHooks['NewRevisionFromEditComplete'][] =
+				'SplitPrivateWiki::onNewRevisionFromEditComplete';
+		}
+	}
+
+	/**
 	 * @param array $config Configuration for split wiki. Keys as follows:
 	 *   'private' - Config settings for private wiki. Must include
 	 *       wgDBname, wgDBuser, wgDBpassword, wgScriptPath,
@@ -216,7 +231,7 @@ class SplitPrivateWiki {
 		$up->addExtensionTable( 'foreignrevisionlink', __DIR__ . '/../sql/tables.sql' );
 	}
 
-	public static function onNewRevisionFromEditComplete( Page $wikipage, $rev, $revid, $user, $tags ) {
+	public static function onNewRevisionFromEditComplete( Page $wikipage ) {
 		$title = $wikipage->getTitle();
 		self::sendJob( $title, [
 			'srcWiki' => wfWikiId(),
