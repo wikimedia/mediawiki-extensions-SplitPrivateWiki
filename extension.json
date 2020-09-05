@@ -21,10 +21,10 @@
 		"SplitPrivateWiki": "src/SplitPrivateWiki.php",
 		"SyncArticleJob": "src/SyncArticleJob.php"
 	},
+	"callback": "SplitPrivateWiki::registerExtension",
 	"Hooks": {
 		"InitializeArticleMaybeRedirect": "SplitPrivateWiki::onInitializeArticleMaybeRedirect",
 		"LoadExtensionSchemaUpdates": "SplitPrivateWiki::onLoadExtensionSchemaUpdates",
-		"NewRevisionFromEditComplete": "SplitPrivateWiki::onNewRevisionFromEditComplete",
 		"ArticleDeleteComplete": "SplitPrivateWiki::onArticleDeleteComplete",
 		"ArticleUndelete": "SplitPrivateWiki::onArticleUndelete",
 		"TitleMoveComplete": "SplitPrivateWiki::ononTitleMoveComplete",
