@@ -61,18 +61,18 @@ class SplitPrivateWiki {
 		$privatePath = $wgConf->get( 'wgScriptPath', $privateWiki );
 		if ( defined( 'MW_DB' ) ) {
 			// For command line scripts
-			$wgDBname = MW_DB;
+			$dbname = MW_DB;
 		} elseif (
 			( WebRequest::detectServer() === $privateServer ) &&
 			( strpos( $_SERVER['REQUEST_URI'], $privatePath ) === 0 )
 		) {
-			$wgDBname = $privateWiki;
+			$dbname = $privateWiki;
 		} else {
-			$wgDBname = $publicWiki;
+			$dbname = $publicWiki;
 		}
 
 		self::setupLoadBalancer( $privateWiki, $publicWiki, $wgConf );
-		$wgConf->extractAllGlobals( $wgDBname );
+		$wgConf->extractAllGlobals( $dbname );
 	}
 
 	/**
