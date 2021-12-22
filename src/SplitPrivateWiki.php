@@ -234,14 +234,14 @@ class SplitPrivateWiki {
 	public static function onNewRevisionFromEditComplete( Page $wikipage ) {
 		$title = $wikipage->getTitle();
 		self::sendJob( $title, [
-			'srcWiki' => wfWikiId(),
+			'srcWiki' => WikiMap::getCurrentWikiId(),
 			'srcPrefixedText' => $title->getPrefixedDBkey(),
 		] );
 	}
 
 	public static function onArticleUndelete( Title $title, $created, $comment, $oldPageId, $restoredPages ) {
 		self::sendJob( $title, [
-			'srcWiki' => wfWikiId(),
+			'srcWiki' => WikiMap::getCurrentWikiId(),
 			'srcPrefixedText' => $title->getPrefixedDBkey(),
 		] );
 	}
@@ -251,14 +251,14 @@ class SplitPrivateWiki {
 	) {
 		// Hacky. Page moves aren't supported yet. So for now delete and recreate.
 		self::sendJob( $oldTitle, [
-			'srcWiki' => wfWikiId(),
+			'srcWiki' => WikiMap::getCurrentWikiId(),
 			'srcPrefixedText' => $oldTitle->getPrefixedDBkey(),
 			'forceDelete' => $user->getName(),
 			'forceDeleteReason' => $reason
 		] );
 
 		self::sendJob( $newTitle, [
-			'srcWiki' => wfWikiId(),
+			'srcWiki' => WikiMap::getCurrentWikiId(),
 			'srcPrefixedText' => $newTitle->getPrefixedDBkey(),
 		] );
 	}
@@ -274,7 +274,7 @@ class SplitPrivateWiki {
 	) {
 		$title = $wikipage->getTitle();
 		self::sendJob( $title, [
-			'srcWiki' => wfWikiId(),
+			'srcWiki' => WikiMap::getCurrentWikiId(),
 			'srcPrefixedText' => $title->getPrefixedDBkey(),
 			'forceDelete' => $user->getName(),
 			'forceDeleteReason' => $reason
@@ -288,7 +288,7 @@ class SplitPrivateWiki {
 			in_array( $title->getNamespace(), $wgBuiltinNamespacesToRename )
 		) {
 			foreach ( $wgConf->wikis as $wiki ) {
-				if ( $wiki === wfWikiId() ) {
+				if ( $wiki === WikiMap::getCurrentWikiId() ) {
 					continue;
 				}
 				$jobs = [
