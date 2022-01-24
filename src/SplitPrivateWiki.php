@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 
 class SplitPrivateWiki {
@@ -287,6 +288,12 @@ class SplitPrivateWiki {
 			in_array( $title->getNamespace(), $wgExclusiveNamespaces ) ||
 			in_array( $title->getNamespace(), $wgBuiltinNamespacesToRename )
 		) {
+			if ( method_exists( MediaWikiServices::class, 'getJobQueueGroupFactory' ) ) {
+				// MW 1.37+
+				$jobQueueGroupFactory = MediaWikiServices::getInstance()->getJobQueueGroupFactory();
+			} else {
+				$jobQueueGroupFactory = null;
+			}
 			foreach ( $wgConf->wikis as $wiki ) {
 				if ( $wiki === WikiMap::getCurrentWikiId() ) {
 					continue;
@@ -294,7 +301,12 @@ class SplitPrivateWiki {
 				$jobs = [
 					new SyncArticleJob( $title, $params )
 				];
-				JobQueueGroup::singleton( $wiki )->lazyPush( $jobs );
+				if ( $jobQueueGroupFactory ) {
+					// MW 1.37+
+					$jobQueueGroup = $jobQueueGroupFactory->makeJobQueueGroup( $wiki )->lazyPush( $jobs );
+				} else {
+					JobQueueGroup::singleton( $wiki )->lazyPush( $jobs );
+				}
 			}
 		}
 	}
