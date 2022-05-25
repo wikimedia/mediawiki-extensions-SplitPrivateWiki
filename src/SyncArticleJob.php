@@ -111,19 +111,35 @@ class SyncArticleJob extends Job {
 			if ( !$user || !$content ) {
 				throw new Exception( "Cannot make user or content" );
 			}
-			$ret = $localPage->doEditContent(
-				$content,
-				$info->rev_comment,
-				$flags,
-				false,
-				$user,
-				'',
-				[ 'auto-sync' ]
-			);
-			if ( !$ret->isGood() || !$ret->value['revision'] ) {
-				throw new Exception( $ret->getWikiText() );
+			if ( method_exists( $localPage, 'doUserEditContent' ) ) {
+				// MW 1.36+
+				$ret = $localPage->doUserEditContent(
+					$content,
+					$user,
+					$info->rev_comment,
+					$flags,
+					false,
+					[ 'auto-sync' ]
+				);
+				if ( !$ret->isGood() || !$ret->value['revision-record'] ) {
+					throw new Exception( $ret->getWikiText() );
+				}
+				$newRevId = $ret->value['revision-record']->getId();
+			} else {
+				$ret = $localPage->doEditContent(
+					$content,
+					$info->rev_comment,
+					$flags,
+					false,
+					$user,
+					'',
+					[ 'auto-sync' ]
+				);
+				if ( !$ret->isGood() || !$ret->value['revision'] ) {
+					throw new Exception( $ret->getWikiText() );
+				}
+				$newRevId = $ret->value['revision']->getId();
 			}
-			$newRevId = $ret->value['revision']->getId();
 			if ( !$newRevId ) {
 				throw new Exception( "New revision has id 0?" );
 			}
