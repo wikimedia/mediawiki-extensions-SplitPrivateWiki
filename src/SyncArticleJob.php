@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
+
 class SyncArticleJob extends Job {
 	/**
 	 * @param Title $title Title of source page
@@ -46,7 +48,12 @@ class SyncArticleJob extends Job {
 		$summary = $this->params['forceDeleteSummary'] ?? '';
 
 		$pageId = $localTitle->getArticleID();
-		$page = WikiPage::factory( $localTitle );
+		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
+			// MW 1.36+
+			$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $localTitle );
+		} else {
+			$page = WikiPage::factory( $localTitle );
+		}
 
 		$error = '';
 		if ( version_compare( MW_VERSION, '1.35', '<' ) ) {
@@ -86,7 +93,12 @@ class SyncArticleJob extends Job {
 		global $wgSplitWikiShowInRc;
 		$mostRecentForeignRev = $this->getMostRecentForeignRev( $localTitle );
 		$toImport = $this->getRevisionsSince( $mostRecentForeignRev );
-		$localPage = WikiPage::factory( $localTitle );
+		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
+			// MW 1.36+
+			$localPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $localTitle );
+		} else {
+			$localPage = WikiPage::factory( $localTitle );
+		}
 		$dbw = wfGetDB( DB_MASTER );
 		foreach ( $toImport as $info ) {
 			$user = User::newFromName( $info->rev_user_text, false );
