@@ -27,7 +27,7 @@
 		"LoadExtensionSchemaUpdates": "SplitPrivateWiki::onLoadExtensionSchemaUpdates",
 		"ArticleDeleteComplete": "SplitPrivateWiki::onArticleDeleteComplete",
 		"ArticleUndelete": "SplitPrivateWiki::onArticleUndelete",
-		"TitleMoveComplete": "SplitPrivateWiki::ononTitleMoveComplete",
+		"PageMoveComplete": "SplitPrivateWiki::onPageMoveComplete",
 		"LanguageGetNamespaces": "SplitPrivateWiki::onLanguageGetNamespaces"
 	},
 	"config": {

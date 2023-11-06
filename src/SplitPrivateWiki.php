@@ -247,20 +247,26 @@ class SplitPrivateWiki {
 		] );
 	}
 
-	public static function onTitleMoveComplete(
-		Title $oldTitle, Title $newTitle, UserIdentity $user, $pageId, $redirId, $reason, $nullRevision
+	public static function onPageMoveComplete(
+		MediaWiki\Linker\LinkTarget $old,
+		MediaWiki\Linker\LinkTarget $new,
+		MediaWiki\User\UserIdentity $userIdentity,
+		int $pageId,
+		int $redirId,
+		string $reason,
+		MediaWiki\Revision\RevisionRecord $revision
 	) {
 		// Hacky. Page moves aren't supported yet. So for now delete and recreate.
-		self::sendJob( $oldTitle, [
+		self::sendJob( $old, [
 			'srcWiki' => WikiMap::getCurrentWikiId(),
-			'srcPrefixedText' => $oldTitle->getPrefixedDBkey(),
-			'forceDelete' => $user->getName(),
+			'srcPrefixedText' => $old->getPrefixedDBkey(),
+			'forceDelete' => $userIdentity->getName(),
 			'forceDeleteReason' => $reason
 		] );
 
-		self::sendJob( $newTitle, [
+		self::sendJob( $new, [
 			'srcWiki' => WikiMap::getCurrentWikiId(),
-			'srcPrefixedText' => $newTitle->getPrefixedDBkey(),
+			'srcPrefixedText' => $new->getPrefixedDBkey(),
 		] );
 	}
 
