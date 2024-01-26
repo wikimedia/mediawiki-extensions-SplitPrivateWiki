@@ -225,7 +225,7 @@ class SyncArticleJob extends Job {
 			'frl_foreign_rev_id',
 			[
 				'rev_id = frl_rev_id',
-				'rev_page' => $localTitle->getArticleId( Title::GAID_FOR_UPDATE )
+				'rev_page' => $localTitle->getArticleId( IDBAccessObject::READ_LATEST )
 			],
 			__METHOD__,
 			[ 'ORDER BY' => 'rev_id desc', 'LOCK IN SHARE MODE' ]
