@@ -72,7 +72,7 @@ class SyncArticleJob extends Job {
 			throw new Exception( $status->getWikiText() );
 		}
 		$logId = $status->value;
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw = wfGetDB( DB_PRIMARY );
 		// Try and make it run after the rc entry insert.
 		// FIXME doesn't work.
 		/* DeferredUpdates::addCallableUpdate( function () use ( $dbw, $logId, $pageId ) {
@@ -99,7 +99,7 @@ class SyncArticleJob extends Job {
 		} else {
 			$localPage = WikiPage::factory( $localTitle );
 		}
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw = wfGetDB( DB_PRIMARY );
 		foreach ( $toImport as $info ) {
 			$user = User::newFromName( $info->rev_user_text, false );
 			$content = ContentHandler::makeContent(
@@ -219,7 +219,7 @@ class SyncArticleJob extends Job {
 	}
 
 	private function getMostRecentForeignRev( Title $localTitle ) {
-		$dbr = wfGetDB( DB_MASTER );
+		$dbr = wfGetDB( DB_PRIMARY );
 		return $dbr->selectField(
 			[ 'revision', 'foreignrevisionlink' ],
 			'frl_foreign_rev_id',
