@@ -72,7 +72,7 @@ class SyncArticleJob extends Job {
 			throw new Exception( $status->getWikiText() );
 		}
 		$logId = $status->value;
-		$dbw = wfGetDB( DB_PRIMARY );
+		$dbw = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnection( DB_PRIMARY );
 		// Try and make it run after the rc entry insert.
 		// FIXME doesn't work.
 		/* DeferredUpdates::addCallableUpdate( function () use ( $dbw, $logId, $pageId ) {
@@ -99,7 +99,7 @@ class SyncArticleJob extends Job {
 		} else {
 			$localPage = WikiPage::factory( $localTitle );
 		}
-		$dbw = wfGetDB( DB_PRIMARY );
+		$dbw = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnection( DB_PRIMARY );
 		foreach ( $toImport as $info ) {
 			$user = User::newFromName( $info->rev_user_text, false );
 			$content = ContentHandler::makeContent(
@@ -181,7 +181,8 @@ class SyncArticleJob extends Job {
 			return $pageId;
 		}
 		$title = $this->getTitle();
-		$dbrForeign = wfGetDB( DB_REPLICA, [], $this->params['srcWiki'] );
+		$dbrForeign = MediaWikiServices::getInstance()->getDBLoadBalancer()
+			->getConnection( DB_REPLICA, [], $this->params['srcWiki'] );
 		$pageId = $dbrForeign->selectField(
 			'page',
 			'page_id',
@@ -195,7 +196,8 @@ class SyncArticleJob extends Job {
 	}
 
 	private function getRevisionsSince( $latest ) {
-		$dbr = wfGetDB( DB_REPLICA, [], $this->params['srcWiki'] );
+		$dbr = MediaWikiServices::getInstance()->getDBLoadBalancer()
+			->getConnection( DB_REPLICA, [], $this->params['srcWiki'] );
 
 		// We are assuming here that external storage is not being used.
 		return $dbr->select(
@@ -219,7 +221,7 @@ class SyncArticleJob extends Job {
 	}
 
 	private function getMostRecentForeignRev( Title $localTitle ) {
-		$dbr = wfGetDB( DB_PRIMARY );
+		$dbr = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnection( DB_PRIMARY );
 		return $dbr->selectField(
 			[ 'revision', 'foreignrevisionlink' ],
 			'frl_foreign_rev_id',
